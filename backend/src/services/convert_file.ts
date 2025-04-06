@@ -6,6 +6,7 @@ import ffmpegPath from 'ffmpeg-static';
 ffmpeg.setFfmpegPath(ffmpegPath!);
 
 export function convertWavToHls(inputPath: string, outputDir: string): Promise<string> {
+  // Convert the wav file in the input path to HLS in the output dir.
   return new Promise((resolve, reject) => {
     // Check again if file exists
     if (!fs.existsSync(inputPath)) {
@@ -17,7 +18,7 @@ export function convertWavToHls(inputPath: string, outputDir: string): Promise<s
       return reject(new Error('Input file is not a WAV file.'));
     }
 
-    // Ensure output directory exists
+    // Ensure the output directory exists
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
