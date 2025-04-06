@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 
 const FileUploadComponent: React.FC = () => {
+  // Gets a file path and a submit from the user.
+  On submission, he sends a request to the server, that converts the data.
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
