@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const FileInputComponent = () => {
   const [inputText, setInputText] = useState('');
   const [status, setStatus] = useState('Submit');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleChange = (e: { target: { value: React.SetStateAction<string>; }; }) => {
     setStatus('submit');
@@ -13,7 +13,7 @@ const FileInputComponent = () => {
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     setStatus('In Progress');
-    setErrorMessage('');
+    setStatusMessage('');
 
     try {
       const response = await fetch(`http://localhost:8000/process-hls?path=${inputText}`, {
@@ -21,17 +21,17 @@ const FileInputComponent = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response;
+        setStatusMessage(`Successefully converted!`);
         setStatus('Success');
-        console.log(data); // Handle the response as needed
       } else {
         setStatus('Failed');
         const errorData = await response.json();
-        setErrorMessage(errorData.message || 'Unknown error');
+        setStatusMessage('Invalid Input file');
       }
     } catch (error) {
       setStatus('Failed');
-      setErrorMessage('Error connecting to the server');
+      setStatusMessage("Unexpected server error");
     }
   };
   // Function to determine button color based on status
@@ -63,7 +63,8 @@ const FileInputComponent = () => {
           {status}
         </button>
       </form>
-      {status === 'Failed' && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {status === 'Failed' && <p style={{ color: 'red' }}>{statusMessage}</p>}
+      {status === 'Success' && <p style={{ color: 'green' }}>{statusMessage}</p>}
     </div>
   );
 };
