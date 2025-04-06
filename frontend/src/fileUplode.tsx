@@ -23,10 +23,10 @@ const FileInputComponent = () => {
       if (response.ok) {
         const data = await response;
         setStatusMessage(`Successefully converted!`);
-        setStatus('Success');
+        setStatus('Done');
       } else {
         setStatus('Failed');
-        const errorData = await response.json();
+        const errorData = await response;
         setStatusMessage('Invalid Input file');
       }
     } catch (error) {
@@ -39,7 +39,7 @@ const FileInputComponent = () => {
     switch (status) {
       case 'In Progress':
         return { backgroundColor: 'blue', color: 'white' };
-      case 'Success':
+      case 'Done':
         return { backgroundColor: 'green', color: 'white' };
       case 'Failed':
         return { backgroundColor: 'red', color: 'white' };
@@ -64,7 +64,7 @@ const FileInputComponent = () => {
         </button>
       </form>
       {status === 'Failed' && <p style={{ color: 'red' }}>{statusMessage}</p>}
-      {status === 'Success' && <p style={{ color: 'green' }}>{statusMessage}</p>}
+      {status === 'Done' && <p style={{ color: 'green' }}>{statusMessage}</p>}
     </div>
   );
 };
