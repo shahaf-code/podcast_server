@@ -5,10 +5,10 @@ const path = require('path')
 const router: Router = Router();
 
 router.get('/process-hls', (req: Request, res: Response) => {
-  console.log(req.query);
+  // Endpoint to start the creation of an HLS file format from WAV.
   const filePath = req.query.path;
   if (!filePath || typeof filePath !== 'string') {
-    res.send('Input file does not exist.');
+    res.status(500).send('Input file does not exist.');
     return;
   }
   convertWavToHls(filePath, `src/hls_destenation/${path.basename(filePath)}`)
