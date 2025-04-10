@@ -8,17 +8,19 @@ import {Response} from 'express'
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
 
-export async function convertWavToHls(inputPath: string, outputDir: string, res: Response): Promise<string> {
-  return new Promise((resolve, reject) => {
+export async function convertWavToHls(inputPath: string, outputDir: string, res: Response) {
     // Check again if file exists
     if (!fs.existsSync(inputPath)) {
-      return reject(new Error('Input file does not exist.'));
-    }
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Input file does not exist.' })}\n\n`);
+      res.end();
+      return;
+        }
 
     // Check if it's a .wav file
     if (path.extname(inputPath).toLowerCase() !== WAV_EXTENTION) {
-      return reject(new Error('Input file is not a WAV file.'));
-    }
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Input file is not a WAV file.' })}\n\n`);
+      res.end();
+      return;    }
 
     // Ensure output directory exists
     if (!fs.existsSync(outputDir)) {
@@ -48,7 +50,11 @@ export async function convertWavToHls(inputPath: string, outputDir: string, res:
       })
       .on('end', () => {
         res.write(`data ${JSON.stringify({type: 'done'})}`)})
-      .on('error', reject)
-      .run();
-  });
+        .on('error', (err) => {
+          res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
+          res.end();
+        })
+              .run();
+  ;
 }
+
