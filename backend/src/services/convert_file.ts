@@ -3,11 +3,12 @@ import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
 import { WAV_EXTENTION } from '../constants';
+import {Response} from 'express'
 
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
 
-export async function convertWavToHls(inputPath: string, outputDir: string): Promise<string> {
+export async function convertWavToHls(inputPath: string, outputDir: string, res: Response): Promise<string> {
   return new Promise((resolve, reject) => {
     // Check again if file exists
     if (!fs.existsSync(inputPath)) {
@@ -36,7 +37,17 @@ export async function convertWavToHls(inputPath: string, outputDir: string): Pro
         '-hls_segment_filename', path.join(outputDir, `${baseName}_%03d.ts`)
       ])
       .output(outputPath)
-      .on('end', () => resolve(outputPath))
+      .on('progress', (progress) => {
+        console.log(progress.percent?.toFixed(2))
+        const payload = JSON.stringify({
+          type: 'progress',
+          percent: progress.percent?.toFixed(2),
+          timemark: progress.timemark
+        });
+        res.write(payload);
+      })
+      .on('end', () => {
+        res.write(`data ${JSON.stringify({type: 'done'})}`)})
       .on('error', reject)
       .run();
   });

@@ -5,6 +5,9 @@ const path = require('path')
 const router: Router = Router();
 
 router.get('/process-hls', async (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('connection', 'keep-alive');
 
   console.log(req.query.path);
   const filePath = req.query.path;
@@ -13,7 +16,7 @@ router.get('/process-hls', async (req: Request, res: Response) => {
     return;
   }
   try {
-      const result = await convertWavToHls(filePath, `src/hls_destenation/${path.basename(filePath)}`)
+      const result = await convertWavToHls(filePath, `src/hls_destenation/${path.basename(filePath)}`, res)
       res.status(201).send(`HLS playlist created at: ${result}`);
   } catch (err) {
     res.status(500).send(`Failed to convert. ${err}`);
