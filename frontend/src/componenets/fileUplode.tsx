@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import ProgressBar from './prograssBar';
 
-const FileInputComponent = () => {
+export const FileInputComponent = () => {
   const [inputText, setInputText] = useState('');
   const [status, setStatus] = useState('Submit');
   const [statusMessage, setStatusMessage] = useState('');
@@ -20,9 +19,7 @@ const FileInputComponent = () => {
     setStatus('In Progress');
     setPercent(0);
     setStatusMessage('');
-    const encodedPath = encodeURIComponent(inputText);
-    const eventSource = new EventSource(`http://localhost:8000/process-hls?path=${encodedPath}`);
-
+    const eventSource = new EventSource(`http://localhost:8000/process-hls?path=${inputText}`);
     eventSource.onmessage = (event) => {
       console.log('SSE: ', event.data)
       const data = JSON.parse(event.data);
@@ -44,7 +41,7 @@ const FileInputComponent = () => {
     eventSource.onerror = (err) => {
       console.error('SSE error:', err);
       setStatus('Failed');
-      setStatusMessage('Connection error.');
+      setStatusMessage(`Connection error`);
       eventSource.close();
     };
   };
@@ -78,15 +75,9 @@ const FileInputComponent = () => {
         </button>
       </form>
       <progress value={percent} max="100" style={{width: '60%', marginTop: '40px'}}/>
-
+      <p>{percent.toFixed(2)}%</p>
       {status === 'Failed' && <p style={{ color: 'red' }}>{statusMessage}</p>}
       {status === 'Done' && <p style={{ color: 'green' }}>{statusMessage}</p>}
     </div>
   );
 };
-
-export default FileInputComponent;
-function setPercent(arg0: number) {
-  throw new Error('Function not implemented.');
-}
-

@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import FileInputComponent from './componenets/fileUplode';
+import { FileInputComponent } from './componenets/fileUplode';
 
 function App() {
   return (

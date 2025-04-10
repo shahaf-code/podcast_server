@@ -9,7 +9,7 @@ import {Response} from 'express'
 ffmpeg.setFfmpegPath(ffmpegPath!);
 
 interface SSEResponse extends Response {
-  flush: () => void;
+  flush?(): void;
 }
 
 export async function convertWavToHls(inputPath: string, outputDir: string, res: SSEResponse) {
@@ -19,7 +19,6 @@ export async function convertWavToHls(inputPath: string, outputDir: string, res:
       res.end();
       return;
         }
-
     // Check if it's a .wav file
     if (path.extname(inputPath).toLowerCase() !== WAV_EXTENTION) {
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Input file is not a WAV file.' })}\n\n`);
@@ -34,7 +33,6 @@ export async function convertWavToHls(inputPath: string, outputDir: string, res:
     const baseName = path.basename(inputPath, WAV_EXTENTION);
     const outputPath = path.join(outputDir, `${baseName}.m3u8`);
 
-    // Convert to HLS
     ffmpeg(inputPath)
       .audioCodec('aac')
       .format('hls')
@@ -44,23 +42,27 @@ export async function convertWavToHls(inputPath: string, outputDir: string, res:
       ])
       .output(outputPath)
       .on('progress', (progress) => {
-        console.log(progress.percent?.toFixed(2))
         const payload = JSON.stringify({
           type: 'progress',
-          percent: progress.percent?.toFixed(2),
-          timemark: progress.timemark
+          percent: progress.percent?.toFixed(2) || 10,
         });
-        res.write(payload);
+        console.log(payload)
+
+        res.write(`data: ${payload}\n\n`);
         res.flush?.();
       })
       .on('end', () => {
-        console.log("here")
-        res.write(`data ${JSON.stringify({type: 'done'})}`)})
+        console.log("done")
+        res.write(`data: {"type": "done"}\n\n`)
+        res.flush?.();
+        res.end();
+      })
+        
         .on('error', (err) => {
           res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
           res.end();
         })
-              .run();
+        .run();
   ;
 }
 
