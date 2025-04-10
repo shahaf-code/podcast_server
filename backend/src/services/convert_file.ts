@@ -8,7 +8,11 @@ import {Response} from 'express'
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
 
-export async function convertWavToHls(inputPath: string, outputDir: string, res: Response) {
+interface SSEResponse extends Response {
+  flush: () => void;
+}
+
+export async function convertWavToHls(inputPath: string, outputDir: string, res: SSEResponse) {
     // Check again if file exists
     if (!fs.existsSync(inputPath)) {
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Input file does not exist.' })}\n\n`);
@@ -47,8 +51,10 @@ export async function convertWavToHls(inputPath: string, outputDir: string, res:
           timemark: progress.timemark
         });
         res.write(payload);
+        res.flush?.();
       })
       .on('end', () => {
+        console.log("here")
         res.write(`data ${JSON.stringify({type: 'done'})}`)})
         .on('error', (err) => {
           res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`);
