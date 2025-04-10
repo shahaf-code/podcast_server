@@ -1,38 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const FileInputComponent = () => {
+export const FileInputComponent = () => {
   const [inputText, setInputText] = useState('');
   const [status, setStatus] = useState('Submit');
   const [statusMessage, setStatusMessage] = useState('');
+  const [percent, setPercent] = useState(0);
 
   const handleChange = (e: { target: { value: React.SetStateAction<string>; }; }) => {
     setStatus('submit');
     setInputText(e.target.value);
-  };
+    setPercent(0);
+    setStatusMessage('');
 
+  };
+  
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     setStatus('In Progress');
+    setPercent(0);
     setStatusMessage('');
+    const eventSource = new EventSource(`http://localhost:8000/process-hls?path=${inputText}`);
+    eventSource.onmessage = (event) => {
+      console.log('SSE: ', event.data)
+      const data = JSON.parse(event.data);
+      if (data.type === 'progress') {
+        setPercent(parseFloat(data.percent));
+        setStatusMessage(`Progress: ${data.percent}%`);
 
-    try {
-      const response = await fetch(`http://localhost:8000/process-hls?path=${inputText}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        const data = await response;
-        setStatusMessage(`Successefully converted!`);
+      } else if (data.type === 'done') {
+        setPercent(100);
         setStatus('Done');
-      } else {
+        setStatusMessage('Successfully converted!');
+        eventSource.close();
+        } else if (data.type === 'error') {
         setStatus('Failed');
-        const errorData = await response;
-        setStatusMessage('Invalid Input file');
-      }
-    } catch (error) {
+        setStatusMessage(`Error: ${data.message}`);
+        eventSource.close();
+        }
+        }
+    eventSource.onerror = (err) => {
+      console.error('SSE error:', err);
       setStatus('Failed');
-      setStatusMessage("Unexpected server error");
-    }
+      setStatusMessage(`Connection error`);
+      eventSource.close();
+    };
   };
   // Function to determine button color based on status
   const getButtonColor = () => {
@@ -63,10 +74,10 @@ const FileInputComponent = () => {
           {status}
         </button>
       </form>
+      <progress value={percent} max="100" style={{width: '60%', marginTop: '40px'}}/>
+      <p>{percent.toFixed(2)}%</p>
       {status === 'Failed' && <p style={{ color: 'red' }}>{statusMessage}</p>}
       {status === 'Done' && <p style={{ color: 'green' }}>{statusMessage}</p>}
     </div>
   );
 };
-
-export default FileInputComponent;

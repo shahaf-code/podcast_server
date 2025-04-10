@@ -3,8 +3,18 @@ import { convertWavToHls } from '../services/convert_file';
 const path = require('path')
 
 const router: Router = Router();
+interface SSEResponse extends Response {
+  flush?(): void;
+}
+router.get('/process-hls', async (req: Request, res: SSEResponse) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.flushHeaders?.()
 
-router.get('/process-hls', async (req: Request, res: Response) => {
 
   console.log(req.query.path);
   const filePath = req.query.path;
@@ -13,8 +23,7 @@ router.get('/process-hls', async (req: Request, res: Response) => {
     return;
   }
   try {
-      const result = await convertWavToHls(filePath, `src/hls_destenation/${path.basename(filePath)}`)
-      res.status(201).send(`HLS playlist created at: ${result}`);
+      const result = await convertWavToHls(filePath, `src/hls_destenation/${path.basename(filePath)}`, res)
   } catch (err) {
     res.status(500).send(`Failed to convert. ${err}`);
   };
